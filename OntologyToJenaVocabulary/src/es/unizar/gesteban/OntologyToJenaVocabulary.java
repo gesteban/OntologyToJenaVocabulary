@@ -91,9 +91,10 @@ public class OntologyToJenaVocabulary {
             try {
                 // TODO check filename to be valid
                 voc.write(voc.prefix.toUpperCase() + ".java", packagePath);
+                System.out.printf("[%s: %s] Created vocabulary file\n", voc.prefix, voc.namespace);
             } catch (Exception ex) {
-                System.err.printf(">>> [%s] [%s]\n", voc.namespace, voc.prefix);
-                ex.printStackTrace();
+                System.out.printf("[%s: %s] Error creating vocabulary file\n", voc.prefix, voc.namespace);
+                // ex.printStackTrace();
             }
     }
 }
