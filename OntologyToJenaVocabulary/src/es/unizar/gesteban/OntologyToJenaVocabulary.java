@@ -1,6 +1,5 @@
 package es.unizar.gesteban;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -9,6 +8,7 @@ import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.varia.NullAppender;
 
 import com.hp.hpl.jena.ontology.DatatypeProperty;
+import com.hp.hpl.jena.ontology.Individual;
 import com.hp.hpl.jena.ontology.ObjectProperty;
 import com.hp.hpl.jena.ontology.OntClass;
 import com.hp.hpl.jena.ontology.OntModel;
@@ -27,9 +27,10 @@ public class OntologyToJenaVocabulary {
      * @throws Exception
      */
     public static void main(String[] args) {
-        if(args.length!=2) {
+        if (args.length != 2) {
             System.err.println("Usage: OntologyToJenaVocabulary URL_or_ontology_file package_path");
-            System.err.println("       e.g. java -jar OntologyToJenaVocabulary.jar http://xmlns.com/foaf/0.1/ com.mycompany");
+            System.err
+                    .println("       e.g. java -jar OntologyToJenaVocabulary.jar http://xmlns.com/foaf/0.1/ com.mycompany");
             System.exit(0);
         }
         BasicConfigurator.configure(new NullAppender());
@@ -52,6 +53,10 @@ public class OntologyToJenaVocabulary {
         // Iterating data properties
         for (DatatypeProperty aDatatypeProperty : model.listDatatypeProperties().toSet())
             add(aDatatypeProperty);
+
+        // Iterating individuals
+        for (Individual anIndividual : model.listIndividuals().toSet())
+            add(anIndividual);
     }
 
     public static void add(OntClass entity) {
@@ -72,12 +77,22 @@ public class OntologyToJenaVocabulary {
         voc.addProperty(entity.getLocalName());
     }
 
+    public static void add(Individual entity) {
+        JenaVocabulary voc;
+        if ((voc = vocSet.get(entity.getNameSpace())) == null) {
+            voc = new JenaVocabulary(entity.getNameSpace(), model.getNsURIPrefix(entity.getNameSpace()));
+            vocSet.put(entity.getNameSpace(), voc);
+        }
+        voc.addIndividual(entity.getLocalName());
+    }
+
     public static void writeVocs(String packagePath) {
         for (JenaVocabulary voc : vocSet.values())
             try {
                 // TODO check filename to be valid
                 voc.write(voc.prefix.toUpperCase() + ".java", packagePath);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
+                System.err.printf(">>> [%s] [%s]\n", voc.namespace, voc.prefix);
                 ex.printStackTrace();
             }
     }

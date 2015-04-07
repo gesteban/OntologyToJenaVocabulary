@@ -10,13 +10,14 @@ public class JenaVocabulary {
     public static String STRING_IMPORTS = "import com.hp.hpl.jena.rdf.model.Property;\n"
             + "import com.hp.hpl.jena.rdf.model.Resource;\nimport com.hp.hpl.jena.rdf.model.ResourceFactory;\n\n";
     public static String STRING_METHODS = "  protected static final Resource resource(String local) {\n"
-            + "    return ResourceFactory.createResource(uri + local);\n}\n\n"
+            + "    return ResourceFactory.createResource(uri + local);\n  }\n\n"
             + "  protected static final Property property(String local) {\n"
             + "    return ResourceFactory.createProperty(uri, local);\n  }\n\n";
 
     public final String namespace, prefix;
     public Set<String> classNameSet = new HashSet<String>();
     public Set<String> propertyNameSet = new HashSet<String>();
+    public Set<String> individualNameSet = new HashSet<String>();
 
     public JenaVocabulary(String namespace) {
         this.namespace = namespace;
@@ -37,6 +38,10 @@ public class JenaVocabulary {
         propertyNameSet.add(localName);
     }
 
+    public void addIndividual(String localName) {
+        individualNameSet.add(localName);
+    }
+
     public void write(String filename, String packagePath) throws IOException {
         PrintWriter writer = new PrintWriter(filename, "UTF-8");
 
@@ -52,13 +57,27 @@ public class JenaVocabulary {
         // write methods
         writer.printf(STRING_METHODS);
         // write classes
-        for (String aClass : classNameSet)
-            writer.printf("  public static final Resource %s = resource(\"%s\");\n", aClass, aClass);
-        writer.printf("\n");
+        if (!classNameSet.isEmpty()) {
+            writer.printf("  // Classes\n");
+            for (String aClass : classNameSet)
+                writer.printf("  public static final Resource %s = resource(\"%s\");\n", aClass, aClass);
+            writer.printf("\n");
+        }
         // write properties
-        for (String aProperty : propertyNameSet)
-            writer.printf("  public static final Property %s = property(\"%s\");\n", aProperty, aProperty);
-        writer.printf("\n}");
+        if (!propertyNameSet.isEmpty()) {
+            writer.printf("  // Properties\n");
+            for (String aProperty : propertyNameSet)
+                writer.printf("  public static final Property %s = property(\"%s\");\n", aProperty, aProperty);
+            writer.printf("\n");
+        }
+        // write individuals
+        if (!individualNameSet.isEmpty()) {
+            writer.printf("  // Individuals\n");
+            for (String anIndividual : individualNameSet)
+                writer.printf("  public static final Resource %s = resource(\"%s\");\n", anIndividual, anIndividual);
+            writer.printf("\n");
+        }
+        writer.printf("}");
         writer.close();
     }
 
